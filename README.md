@@ -1,5 +1,4 @@
 # The List — Shopping Tracker
-# The List — Shopping Tracker
 
 [![Open App](https://img.shields.io/badge/🚀_Open_App-Click_Here-2A2A28?style=for-the-badge)](https://himanshusinghdev.github.io/the-list-app/)
 
