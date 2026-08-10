@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The List</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#2A2A28">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The List">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap');
+
+  :root{
+    --paper: #FBF6EC;
+    --paper-dark: #F1E9D8;
+    --ink: #2A2A28;
+    --ink-soft: #6B665C;
+    --stamp-red: #B23A21;
+    --stamp-green: #4C7A57;
+    --line: #D8CFBB;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: #DCD3BE;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--ink);
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px 80px;
+  }
+
+  .receipt {
+    width: 100%;
+    max-width: 440px;
+    background: var(--paper);
+    position: relative;
+    padding: 36px 28px 28px;
+    box-shadow: 0 20px 40px -20px rgba(0,0,0,0.35), 0 2px 0 rgba(0,0,0,0.04);
+  }
+
+  /* torn edge top and bottom */
+  .receipt::before, .receipt::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    height: 12px;
+    background:
+      linear-gradient(135deg, var(--paper) 50%, transparent 50%) 0 0/16px 16px repeat-x,
+      linear-gradient(-135deg, var(--paper) 50%, transparent 50%) 0 0/16px 16px repeat-x;
+    background-color: transparent;
+  }
+  .receipt::before { top: -11px; transform: scaleY(-1); }
+  .receipt::after { bottom: -11px; }
+
+  .header {
+    text-align: center;
+    border-bottom: 2px dashed var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  .settings-btn {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    opacity: 0.6;
+    transition: opacity 0.15s ease, background 0.15s ease, transform 0.3s ease;
+  }
+  .settings-btn svg { width: 16px; height: 16px; display: block; }
+  .settings-btn:hover {
+    opacity: 1;
+    background: var(--paper-dark);
+    transform: rotate(45deg);
+  }
+
+  .share-btn {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    opacity: 0.6;
+    transition: opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  }
+  .share-btn svg { width: 15px; height: 15px; display: block; }
+  .share-btn:hover {
+    opacity: 1;
+    background: var(--paper-dark);
+    transform: scale(1.1);
+  }
+
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.8px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    padding: 0 26px;
+  }
+
+  h1 {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: 1px;
+    margin: 6px 0 4px;
+  }
+
+  .date {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .credit {
+    margin-top: 10px;
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    color: var(--ink-soft);
+    opacity: 0;
+    transform: translateY(6px);
+    animation: creditIn 0.6s ease 0.3s forwards;
+  }
+
+  .credit-name {
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--stamp-green) 0%, var(--stamp-red) 25%, var(--ink) 50%, var(--stamp-green) 75%, var(--stamp-red) 100%);
+    background-size: 250% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+
+  @keyframes creditIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shimmer {
+    to { background-position: -250% center; }
+  }
+
+  .list-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .list-tabs::-webkit-scrollbar { display: none; }
+
+  .list-tab {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--paper-dark);
+    border: none;
+    border-radius: 14px;
+    padding: 7px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .list-tab.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .list-tab-icon {
+    opacity: 0.7;
+    font-size: 11px;
+    padding: 2px;
+  }
+  .list-tab-icon:hover { opacity: 1; }
+  .list-tab-icon.confirm-delete {
+    opacity: 1;
+    color: var(--stamp-red);
+    font-weight: 700;
+  }
+  .add-list-tab {
+    background: transparent;
+    border: 1px dashed var(--line);
+    color: var(--ink-soft);
+  }
+  .add-list-tab:hover { border-color: var(--stamp-green); color: var(--stamp-green); }
+
+  .list-tab-edit-input {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--paper);
+    border: none;
+    border-bottom: 2px solid var(--stamp-red);
+    padding: 1px 2px;
+    outline: none;
+    width: 90px;
+  }
+
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+    align-items: stretch;
+  }
+
+  .qty-stepper {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid var(--ink);
+  }
+  .qty-stepper button {
+    background: none;
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    color: var(--ink);
+    width: 22px;
+    cursor: pointer;
+    padding: 8px 0;
+  }
+  .qty-stepper button:hover { color: var(--stamp-red); }
+  .qty-stepper span {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  .add-row input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    border-bottom: 2px solid var(--ink);
+    background: transparent;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    padding: 8px 2px;
+    color: var(--ink);
+    outline: none;
+  }
+  .add-row input::placeholder { color: #B7AF9C; }
+  .add-row input:focus { border-bottom-color: var(--stamp-red); }
+
+  .add-row button.add-submit {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 0 18px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .add-row button.add-submit:hover { background: var(--stamp-red); }
+  .add-row button.add-submit:active { transform: scale(0.96); }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin: 22px 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .section-label .label-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sort-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: none;
+    padding: 2px 7px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .sort-btn:hover { border-color: var(--stamp-green); color: var(--stamp-green); }
+  .sort-btn.busy { opacity: 0.6; pointer-events: none; }
+
+  .spend-line {
+    font-family: 'Space Mono', monospace;
+    font-size: 11.5px;
+    color: var(--stamp-green);
+    margin: -4px 0 8px;
+    opacity: 0.85;
+  }
+
+  .category-heading {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--stamp-green);
+    padding: 12px 2px 4px;
+    opacity: 0.85;
+  }
+  .category-heading:first-child { padding-top: 0; }
+
+  .category-select {
+    flex: 0 0 auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    background: var(--paper-dark);
+    border: none;
+    border-radius: 3px;
+    padding: 3px 4px;
+    cursor: pointer;
+    max-width: 118px;
+  }
+
+  .category-loading {
+    flex: 0 0 auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    font-style: italic;
+    color: var(--ink-soft);
+    opacity: 0.6;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.8; } }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 18, 14, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+
+  .modal {
+    background: var(--paper);
+    width: 100%;
+    max-width: 360px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+    border-radius: 6px;
+    box-shadow: 0 20px 50px -10px rgba(0,0,0,0.4);
+  }
+
+  .modal h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    margin: 0 0 10px;
+  }
+
+  .modal p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0 0 16px;
+  }
+
+  .modal input[type="password"], .modal input[type="text"] {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid var(--ink);
+    background: var(--paper-dark);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 8px;
+    outline: none;
+    margin-bottom: 6px;
+  }
+  .modal input:focus { border-bottom-color: var(--stamp-red); }
+
+  .modal-status {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--stamp-green);
+    min-height: 14px;
+    margin-bottom: 12px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .modal-actions button {
+    flex: 1;
+    font-family: 'Space Mono', monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.5px;
+    padding: 10px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  #saveKeyBtn { background: var(--ink); color: var(--paper); }
+  #saveKeyBtn:hover { background: var(--stamp-green); }
+  #testKeyBtn { background: transparent; border: 1px solid var(--stamp-green); color: var(--stamp-green); }
+  #testKeyBtn:hover { background: rgba(76, 122, 87, 0.1); }
+  #testKeyBtn:disabled { opacity: 0.5; pointer-events: none; }
+  #removeKeyBtn { background: transparent; border: 1px solid var(--line); color: var(--ink-soft); }
+  #removeKeyBtn:hover { border-color: var(--stamp-red); color: var(--stamp-red); }
+  #closeModalBtn { background: transparent; border: 1px solid var(--line); color: var(--ink-soft); }
+
+  .modal-status.error { color: var(--stamp-red); }
+
+  .modal-link {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11.5px;
+    color: var(--stamp-green);
+    text-decoration: underline;
+  }
+
+  ul.items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li.item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 11px 2px;
+    border-bottom: 1px dotted var(--line);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .item-number {
+    flex: 0 0 auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    width: 18px;
+    text-align: right;
+    padding-top: 2px;
+    opacity: 0.65;
+  }
+
+  .item-row-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .item-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-left: 32px;
+  }
+
+  .checkbox {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+  .checkbox:hover { border-color: var(--stamp-green); }
+
+  .checkbox-tap {
+    flex: 0 0 auto;
+    padding: 10px;
+    margin: -10px 4px -10px -10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  li.item.done .checkbox {
+    background: var(--stamp-green);
+    border-color: var(--stamp-green);
+  }
+
+  .checkbox svg { opacity: 0; transform: scale(0.5); transition: all 0.15s ease; }
+  li.item.done .checkbox svg { opacity: 1; transform: scale(1); }
+
+  .item-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .item-name {
+    font-size: 15.5px;
+    line-height: 1.35;
+    transition: color 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .name-scroll {
+    display: inline-block;
+    will-change: transform;
+  }
+
+  .item-name.marquee .name-scroll {
+    animation-name: marquee-pingpong;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  @keyframes marquee-pingpong {
+    0%, 12% { transform: translateX(0); }
+    45%, 55% { transform: translateX(var(--scroll-dist, 0)); }
+    88%, 100% { transform: translateX(0); }
+  }
+
+  li.item.done .item-name {
+    color: var(--ink-soft);
+    text-decoration: line-through;
+    text-decoration-color: var(--stamp-green);
+    text-decoration-thickness: 1.5px;
+  }
+
+  .name-edit-input {
+    flex: 1;
+    min-width: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15.5px;
+    color: var(--ink);
+    background: var(--paper-dark);
+    border: none;
+    border-bottom: 2px solid var(--stamp-red);
+    padding: 2px 4px;
+    outline: none;
+  }
+  .purchased-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.3px;
+    color: var(--stamp-green);
+    opacity: 0.75;
+  }
+
+  .qty-badge {
+    flex: 0 0 auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--paper-dark);
+    border-radius: 3px;
+    padding: 2px 6px;
+    cursor: pointer;
+  }
+  .qty-badge:hover { color: var(--stamp-red); }
+
+  .badge-edit-input {
+    flex: 0 0 auto;
+    width: 64px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink);
+    background: var(--paper-dark);
+    border: none;
+    border-bottom: 2px solid var(--stamp-red);
+    padding: 2px 4px;
+    outline: none;
+  }
+
+  .price-badge {
+    flex: 0 0 auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    opacity: 0.5;
+    background: transparent;
+    border: 1px dashed var(--line);
+    border-radius: 3px;
+    padding: 2px 6px;
+    cursor: pointer;
+    transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .price-badge:hover {
+    opacity: 1;
+    border-color: var(--stamp-green);
+    color: var(--stamp-green);
+  }
+  .price-badge.set {
+    opacity: 1;
+    color: var(--stamp-green);
+    background: rgba(76, 122, 87, 0.08);
+    border: 1px solid transparent;
+    font-weight: 700;
+  }
+  .price-badge.set:hover { border-color: var(--stamp-red); color: var(--stamp-red); }
+
+  .recur-btn {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--ink-soft);
+    opacity: 0.55;
+    cursor: pointer;
+    padding: 6px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .recur-btn.active {
+    opacity: 1;
+    color: var(--stamp-green);
+  }
+  .recur-btn:hover, .recur-btn:focus-visible {
+    opacity: 1;
+    background: rgba(76, 122, 87, 0.1);
+    color: var(--stamp-green);
+  }
+
+  .edit-btn {
+    flex: 0 0 auto;
+    opacity: 0.55;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px 6px;
+    border-radius: 4px;
+    transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .edit-btn:hover, .edit-btn:focus-visible {
+    opacity: 1;
+    background: rgba(42, 42, 40, 0.08);
+    color: var(--ink);
+  }
+
+  .remove-btn {
+    opacity: 0.55;
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .remove-btn:hover,
+  .remove-btn:focus-visible {
+    opacity: 1;
+    background: rgba(178, 58, 33, 0.1);
+    color: var(--stamp-red);
+  }
+
+  .stamp {
+    flex: 0 0 auto;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 10.5px;
+    letter-spacing: 1px;
+    color: var(--stamp-green);
+    border: 1.5px solid var(--stamp-green);
+    padding: 2px 7px;
+    border-radius: 3px;
+    transform: rotate(-4deg);
+    display: none;
+  }
+
+  li.item.done .stamp {
+    display: inline-block;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 10px;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    font-family: 'Space Mono', monospace;
+    line-height: 1.6;
+  }
+
+  .footer {
+    margin-top: 26px;
+    padding-top: 14px;
+    border-top: 2px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
+  .clear-done {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  .clear-done:hover { color: var(--stamp-red); }
+
+  .support-row {
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  .support-link {
+    background: none;
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.5px;
+    color: var(--ink-soft);
+    opacity: 0.7;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 12px;
+    transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .support-link:hover {
+    opacity: 1;
+    background: var(--paper-dark);
+    color: var(--stamp-green);
+  }
+
+  .upi-qr-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 16px 0 4px;
+    padding: 16px;
+    background: var(--paper-dark);
+    border-radius: 6px;
+    min-height: 180px;
+  }
+  .upi-qr-wrap img, .upi-qr-wrap canvas { border-radius: 4px; }
+
+  .upi-qr-status {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .upi-manual {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    text-align: center;
+    margin: 14px 0 0;
+    line-height: 1.6;
+  }
+  .upi-manual strong {
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+  }
+
+  .upi-copy-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-left: 4px;
+  }
+  .upi-copy-btn:hover { border-color: var(--stamp-green); color: var(--stamp-green); }
+
+  #openUpiBtn { background: var(--ink); color: var(--paper); width: 100%; }
+  #openUpiBtn:hover { background: var(--stamp-green); }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    max-width: min(90vw, 380px);
+    text-align: center;
+    line-height: 1.4;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    .credit { opacity: 1; transform: none; }
+    .credit-name { -webkit-text-fill-color: var(--ink-soft); color: var(--ink-soft); }
+    .item-name { text-overflow: ellipsis; }
+  }
+</style>
+</head>
+<body>
+
+<div class="receipt">
+  <div class="header">
+    <button class="share-btn" id="shareBtn" aria-label="Share list">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="18" cy="5" r="3"></circle>
+      <circle cx="6" cy="12" r="3"></circle>
+      <circle cx="18" cy="19" r="3"></circle>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+    </svg>
+  </button>
+    <button class="settings-btn" id="settingsBtn" aria-label="AI categorization settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+    <div class="eyebrow">Pantry &amp; Personal · Purchase Log</div>
+    <h1>THE LIST</h1>
+    <div class="date" id="dateLine"></div>
+    <div class="credit">crafted with care by <span class="credit-name">Himanshu</span></div>
+  </div>
+
+  <div class="list-tabs" id="listTabs"></div>
+
+  <div class="add-row">
+    <div class="qty-stepper">
+      <button type="button" id="qtyMinus" aria-label="Decrease quantity">−</button>
+      <span id="qtyValue">1</span>
+      <button type="button" id="qtyPlus" aria-label="Increase quantity">+</button>
+    </div>
+    <input type="text" id="newItem" placeholder="Add an item… e.g. facewash" maxlength="80" autocomplete="off">
+    <button class="add-submit" id="addBtn">ADD</button>
+  </div>
+
+  <div class="section-label">
+    <span class="label-left">To Buy <button class="sort-btn" id="sortBtn">✨ sort</button></span>
+    <span id="toBuyCount">0</span>
+  </div>
+  <div class="spend-line" id="toBuySpend" style="display:none;"></div>
+  <ul class="items" id="toBuyList"></ul>
+  <div class="empty-state" id="emptyToBuy" style="display:none;">Nothing on the list.<br>Add something above to get started.</div>
+
+  <div class="section-label" id="purchasedLabel" style="display:none;"><span>Purchased</span><span id="purchasedCount">0</span></div>
+  <div class="spend-line" id="purchasedSpend" style="display:none;"></div>
+  <ul class="items" id="purchasedList"></ul>
+
+  <div class="footer">
+    <span id="statusLine">loading…</span>
+    <button class="clear-done" id="clearBtn" style="display:none;">clear purchased</button>
+  </div>
+
+  <div class="support-row">
+    <button id="supportBtn" class="support-link">☕ Buy the developer a coffee</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="supportOverlay" style="display:none;">
+  <div class="modal">
+    <h2>☕ Support Himanshu</h2>
+    <p>If this app's been useful, you can send a UPI donation directly — no fees, nothing taken off the top.</p>
+    <input type="number" id="supportAmountInput" placeholder="Any amount (optional)" min="1" step="1" inputmode="decimal">
+    <div id="upiQrWrap" class="upi-qr-wrap">
+      <div id="upiQrCode"></div>
+      <div id="upiQrStatus" class="upi-qr-status">Loading QR code…</div>
+    </div>
+    <div class="modal-actions" style="margin-top:10px;">
+      <button id="openUpiBtn">Open UPI App</button>
+    </div>
+    <p class="upi-manual">Or pay manually to <strong id="upiIdText"></strong> <button id="copyUpiBtn" class="upi-copy-btn">copy</button></p>
+    <button id="closeSupportBtn" style="margin-top:10px; width:100%; background: transparent; border: 1px solid var(--line); color: var(--ink-soft); font-family: 'Space Mono', monospace; font-size: 12.5px; padding: 10px 0; border-radius: 4px; cursor: pointer;">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settingsOverlay" style="display:none;">
+  <div class="modal">
+    <h2>💰 Currency</h2>
+    <p>Symbol shown next to prices, e.g. ₹, $, €, £.</p>
+    <input type="text" id="currencyInput" placeholder="₹" maxlength="3" style="max-width:80px;">
+    <div class="modal-actions" style="margin-top:8px;">
+      <button id="saveCurrencyBtn">Save</button>
+    </div>
+
+    <h2 style="margin-top:22px;">✨ Categorization</h2>
+    <p>Items are sorted automatically using a built-in dictionary — no key or internet needed. For anything it doesn't recognize, you can optionally add a free Gemini API key so unfamiliar items get sorted too. The key is stored only in this browser and used only when the built-in list comes up empty.</p>
+    <input type="password" id="apiKeyInput" placeholder="AIza...">
+    <div class="modal-status" id="modalStatus"></div>
+    <div class="modal-actions">
+      <button id="saveKeyBtn">Save</button>
+      <button id="testKeyBtn">Test</button>
+      <button id="removeKeyBtn">Remove</button>
+    </div>
+    <button id="closeModalBtn" style="margin-top:10px; width:100%;">Close</button>
+    <a class="modal-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a free key from Google AI Studio →</a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'shopping-list:items';
+const LISTS_STORAGE_KEY = 'shopping-list:lists';
+const CURRENT_LIST_STORAGE_KEY = 'shopping-list:current-list';
+const API_KEY_STORAGE = 'shopping-list:gemini-key';
+const CURRENCY_STORAGE = 'shopping-list:currency';
+const SUPPORT_UPI_ID = '7379917071@hdfc';
+const SUPPORT_NAME = 'Himanshu';
+const RECUR_OPTIONS = [0, 7, 14, 30, 60, 90]; // days; 0 = off
+const CATEGORIES = [
+  'Produce', 'Dairy & Eggs', 'Bakery', 'Meat & Seafood', 'Frozen',
+  'Pantry', 'Beverages', 'Snacks', 'Household', 'Personal Care',
+  'Baby & Kids', 'Pet', 'Health', 'Other'
+];
+
+// A free, offline, no-API-needed classifier. Checked before ever touching
+// Gemini, so most common items never cost an API call at all.
+const CATEGORY_KEYWORDS = {
+  'Produce': [
+    'apple','banana','orange','grape','tomato','potato','onion','garlic','carrot',
+    'lettuce','spinach','palak','cucumber','pepper','capsicum','shimla mirch','avocado',
+    'lemon','nimbu','lime','mango','aam','berries','berry','strawberry','blueberry',
+    'raspberry','broccoli','cabbage','patta gobi','mushroom','ginger','adrak',
+    'cauliflower','gobi','corn','bhutta','peas','matar','sprouts','herbs','cilantro',
+    'coriander','dhania','mint','pudina','kiwi','pineapple','ananas','watermelon',
+    'tarbooj','papaya','papita','peach','pear','plum','cherry','celery','beetroot',
+    'chukandar','radish','mooli','zucchini','eggplant','brinjal','baingan','okra',
+    'bhindi','fruit','vegetable','veggies','sabzi','sabji','curry leaves','curry leaf',
+    'drumstick','sahjan','bottle gourd','lauki','ridge gourd','turai','pumpkin',
+    'kaddu','sweet potato','shakarkandi','tamarind','imli','banana leaf','jackfruit',
+    'kathal','guava','amrud','pomegranate','anar','fig','anjeer','dates','khajur',
+    'coconut','nariyal','curry patta','fenugreek leaves','methi','green chilli',
+    'hari mirch','spring onion','arugula','kale','asparagus','artichoke','apricot',
+    'melon','cantaloupe','dragon fruit','lychee','litchi','custard apple','sitafal',
+    'jamun','sapodilla','chikoo','starfruit','passion fruit'
+  ],
+  'Dairy & Eggs': [
+    'milk','doodh','cheese','paneer','yogurt','yoghurt','curd','dahi','butter','makhan',
+    'cream','malai','egg','eggs','anda','ghee','buttermilk','chaas','lassi','custard',
+    'condensed milk','milk powder','cottage cheese','mozzarella','cheddar','parmesan',
+    'feta','ricotta','whipped cream','sour cream','cream cheese','tofu','soy milk',
+    'almond milk','oat milk'
+  ],
+  'Bakery': [
+    'bread','bun','buns','bagel','croissant','cake','muffin','pastry','tortilla',
+    'roti','chapati','naan','paratha','pav','kulcha','donut','doughnut','baguette',
+    'pita','bread rolls','burger bun','pizza base','pizza dough','breadstick',
+    'brownie','cupcake','waffle','pancake','biscuit dough','pie crust','puff pastry',
+    'sandwich bread','multigrain bread','garlic bread'
+  ],
+  'Meat & Seafood': [
+    'chicken','murgh','beef','pork','mutton','goat meat','lamb','fish','machli',
+    'shrimp','prawn','salmon','tuna','tilapia','pomfret','bacon','sausage','sausages',
+    'turkey','ham','crab','lobster','squid','octopus','mackerel','sardine','anchovy',
+    'meat','seafood','kebab','keema','mince','drumstick chicken','chicken breast',
+    'chicken thigh','chicken wings','fish fillet','salami','pepperoni','hot dog'
+  ],
+  'Frozen': [
+    'frozen','ice cream','kulfi','popsicle','nuggets','frozen peas','frozen pizza',
+    'frozen fries','french fries','frozen paratha','frozen vegetables','frozen fruit',
+    'frozen dessert','frozen yogurt','ice','ice cubes','frozen dumplings','momos',
+    'frozen samosa'
+  ],
+  'Pantry': [
+    'rice','chawal','basmati','flour','atta','maida','besan','gram flour','sugar',
+    'chini','jaggery','gur','salt','namak','oil','tel','sunflower oil','mustard oil',
+    'olive oil','coconut oil','pasta','noodles','maggi','lentil','lentils','dal',
+    'toor dal','moong dal','chana dal','urad dal','masoor dal','rajma','chole','kabuli chana',
+    'spice','spices','masala','garam masala','turmeric','haldi','cumin','jeera',
+    'coriander powder','dhania powder','red chilli powder','mirch powder','chaat masala',
+    'cereal','muesli','oats','oatmeal','honey','shahad','vinegar','sauce','soy sauce',
+    'ketchup','mayonnaise','mustard sauce','jam','marmalade','peanut butter','nutella',
+    'tea','chai','coffee','beans','baked beans','kidney beans','soup','soup mix',
+    'baking powder','baking soda','yeast','canned','canned tomatoes','stock','broth',
+    'breadcrumbs','pickle','achar','papad','poha','sooji','rava','semolina','vermicelli',
+    'sevaiyan','cornflour','custard powder','sago','sabudana','ketchup','chutney',
+    'salsa','pasta sauce','cooking oil','ghee tin','hing','asafoetida','fennel',
+    'saunf','mustard seeds','sarson','bay leaf','tej patta','cinnamon','dalchini',
+    'cardamom','elaichi','clove','laung','black pepper','kali mirch','food color',
+    'vanilla extract','chocolate chips','cocoa powder','icing sugar','brown sugar'
+  ],
+  'Beverages': [
+    'water','pani','mineral water','juice','soda','cola','beer','wine','whiskey',
+    'vodka','rum','energy drink','soft drink','sparkling water','soda water',
+    'lemonade','shikanji','coconut water','nariyal pani','smoothie','iced tea',
+    'squash','cold drink','soft beverages','tonic water','flavored water'
+  ],
+  'Snacks': [
+    'chips','wafer','biscuit','biscuits','cookie','cookies','chocolate','candy',
+    'toffee','popcorn','namkeen','sev','bhujia','mixture','chivda','crackers',
+    'nuts','almonds','cashew','kaju','walnut','pistachio','peanuts','granola bar',
+    'chocolates','sweets','mithai','ladoo','barfi','gulab jamun','rasgulla','kurkure',
+    'lays','pretzel','trail mix','protein bar','energy bar','rusk','toast biscuit',
+    'wafer biscuit','marie biscuit','cream biscuit','chikki'
+  ],
+  'Household': [
+    'detergent','washing powder','tissue','tissues','paper towel','toilet paper',
+    'toilet roll','trash bag','trash bags','garbage bags','cleaner','floor cleaner',
+    'phenyl','harpic','toilet cleaner','sponge','scrub','foil','aluminium foil',
+    'cling wrap','plastic wrap','batteries','light bulb','bulb','dish soap',
+    'dishwash','dish wash','vim','bin bags','laundry','fabric softener','air freshener',
+    'mop','broom','jhadu','bucket','dustbin','matchbox','matches','candle',
+    'insect repellent','mosquito coil','odonil','room freshener','glass cleaner',
+    'colin','stain remover','clothes hanger','shoe polish','sandpaper','gloves',
+    'rubber gloves','duster','vacuum bag'
+  ],
+  'Personal Care': [
+    'shampoo','conditioner','facewash','face wash','soap','sabun','bathing soap',
+    'toothpaste','toothbrush','mouthwash','deodorant','perfume body spray','razor',
+    'shaving blade','lotion','body lotion','sunscreen','sunblock','perfume','attar',
+    'sanitary pad','pad','tampon','moisturizer','cream face','shaving cream','shaving foam',
+    'body wash','hand wash','sanitizer','hand sanitizer','hair oil','comb','hairbrush',
+    'nail cutter','nail polish','cotton','cotton buds','earbuds cotton','tissue paper roll',
+    'talcum powder','talc','face pack','face mask','lip balm','vaseline','hair gel',
+    'hair color','henna','mehendi','wax strips','shaving gel','aftershave','makeup',
+    'lipstick','kajal','eyeliner','foundation','face cream','anti aging cream'
+  ],
+  'Baby & Kids': [
+    'diaper','diapers','baby food','formula','wipes','baby wipes','baby',
+    'baby oil','baby powder','baby soap','baby shampoo','baby lotion','pacifier',
+    'feeding bottle','baby cereal','cerelac','baby wash','rash cream'
+  ],
+  'Pet': [
+    'dog food','cat food','pet food','litter','cat litter','pet treats','pet',
+    'dog treats','cat treats','pet shampoo','pet toy','bird food','fish food',
+    'pet leash','pet bed'
+  ],
+  'Health': [
+    'medicine','medicines','vitamin','vitamins','bandage','band aid','first aid',
+    'painkiller','syrup','cough syrup','tablet','tablets','supplement','protein powder',
+    'thermometer','antiseptic','dettol','savlon','face mask surgical','hand gloves',
+    'multivitamin','calcium tablets','iron tablets','ors','digestive tablets',
+    'antacid','pain relief spray','eye drops','ear drops'
+  ]
+};
+
+// Turn a raw item name into normalized, lightly-stemmed words so simple
+// plurals (tomatoes, onions, chips) match the same as their singular form
+// without needing every variant listed by hand.
+function normalizeWords(str){
+  return str.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map(w => {
+    if(w.length > 4 && w.endsWith('ies')) return w.slice(0, -3) + 'y';
+    if(w.length > 4 && w.endsWith('oes')) return w.slice(0, -2);
+    if(w.length > 4 && /(sh|ch|x|ss)es$/.test(w)) return w.slice(0, -2);
+    if(w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) return w.slice(0, -1);
+    return w;
+  });
+}
+
+function localCategorize(name){
+  const rawLower = ' ' + name.toLowerCase().trim() + ' ';
+  const rawWords = name.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const stemmedWords = normalizeWords(name);
+  const wordSet = new Set([...rawWords, ...stemmedWords]);
+  const normalizedJoined = ' ' + stemmedWords.join(' ') + ' ';
+
+  // Pass 1: multi-word phrases first — more specific, so "ice cream"
+  // (Frozen) should win over the generic single word "cream" (Dairy).
+  for(const category of CATEGORIES){
+    const keywords = CATEGORY_KEYWORDS[category];
+    if(!keywords) continue;
+    for(const kw of keywords){
+      if(!kw.includes(' ')) continue;
+      if(rawLower.includes(' ' + kw + ' ') || normalizedJoined.includes(' ' + kw + ' ')){
+        return category;
+      }
+    }
+  }
+
+  // Pass 2: single-word matches.
+  for(const category of CATEGORIES){
+    const keywords = CATEGORY_KEYWORDS[category];
+    if(!keywords) continue;
+    for(const kw of keywords){
+      if(kw.includes(' ')) continue;
+      if(wordSet.has(kw)) return category;
+    }
+  }
+
+  return null;
+}
+let items = []; // {id, name, qty, done, doneAt, recurDays, category, categorizing, listId}
+let lists = []; // {id, name}
+let currentListId = null;
+let loaded = false;
+let addQty = 1;
+
+const listTabs = document.getElementById('listTabs');
+const toBuyList = document.getElementById('toBuyList');
+const purchasedList = document.getElementById('purchasedList');
+const purchasedLabel = document.getElementById('purchasedLabel');
+const toBuySpend = document.getElementById('toBuySpend');
+const purchasedSpend = document.getElementById('purchasedSpend');
+const emptyToBuy = document.getElementById('emptyToBuy');
+const toBuyCount = document.getElementById('toBuyCount');
+const purchasedCount = document.getElementById('purchasedCount');
+const statusLine = document.getElementById('statusLine');
+const clearBtn = document.getElementById('clearBtn');
+const newItemInput = document.getElementById('newItem');
+const toast = document.getElementById('toast');
+const qtyValueEl = document.getElementById('qtyValue');
+const settingsBtn = document.getElementById('settingsBtn');
+const shareBtn = document.getElementById('shareBtn');
+const settingsOverlay = document.getElementById('settingsOverlay');
+const apiKeyInput = document.getElementById('apiKeyInput');
+const currencyInput = document.getElementById('currencyInput');
+const saveCurrencyBtn = document.getElementById('saveCurrencyBtn');
+const supportBtn = document.getElementById('supportBtn');
+const supportOverlay = document.getElementById('supportOverlay');
+const closeSupportBtn = document.getElementById('closeSupportBtn');
+const supportAmountInput = document.getElementById('supportAmountInput');
+const upiQrCode = document.getElementById('upiQrCode');
+const upiQrStatus = document.getElementById('upiQrStatus');
+const openUpiBtn = document.getElementById('openUpiBtn');
+const upiIdText = document.getElementById('upiIdText');
+const copyUpiBtn = document.getElementById('copyUpiBtn');
+const modalStatus = document.getElementById('modalStatus');
+const saveKeyBtn = document.getElementById('saveKeyBtn');
+const testKeyBtn = document.getElementById('testKeyBtn');
+const removeKeyBtn = document.getElementById('removeKeyBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const sortBtn = document.getElementById('sortBtn');
+
+document.getElementById('dateLine').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  const duration = Math.min(6000, Math.max(2200, msg.length * 55));
+  showToast._t = setTimeout(()=> toast.classList.remove('show'), duration);
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function recurLabel(days){
+  return days ? `↻ ${days}d` : '↻';
+}
+
+function getApiKey(){
+  try { return localStorage.getItem(API_KEY_STORAGE) || ''; } catch(e) { return ''; }
+}
+
+function getCurrency(){
+  try { return localStorage.getItem(CURRENCY_STORAGE) || '₹'; } catch(e) { return '₹'; }
+}
+
+function formatMoney(amount){
+  const rounded = Math.round(amount * 100) / 100;
+  const formatted = rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(2);
+  return getCurrency() + formatted;
+}
+
+// --- Local cache so repeated item names never cost another API call ---
+const CATEGORY_CACHE_KEY = 'shopping-list:category-cache';
+function cacheLookupKey(name){ return name.trim().toLowerCase(); }
+function loadCategoryCache(){
+  try { return JSON.parse(localStorage.getItem(CATEGORY_CACHE_KEY) || '{}'); } catch(e){ return {}; }
+}
+function rememberCategory(name, category){
+  try {
+    const cache = loadCategoryCache();
+    cache[cacheLookupKey(name)] = category;
+    localStorage.setItem(CATEGORY_CACHE_KEY, JSON.stringify(cache));
+  } catch(e) {}
+}
+function cachedCategoryFor(name){
+  const cache = loadCategoryCache();
+  return cache[cacheLookupKey(name)] || null;
+}
+
+// --- Gemini categorization -------------------------------------------
+async function categorizeWithGemini(name){
+  const cached = cachedCategoryFor(name);
+  if(cached) return { category: cached, error: null, fromCache: true };
+
+  const key = getApiKey();
+  if(!key) return { category: null, error: 'No API key set' };
+  const prompt = `Classify this shopping list item into exactly one of these categories: ${CATEGORIES.join(', ')}.\nItem: "${name}"\nRespond with only the category name from the list, nothing else.`;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + encodeURIComponent(key);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if(!res.ok){
+      let msg = 'Request failed (HTTP ' + res.status + ')';
+      try {
+        const errJson = await res.json();
+        if(errJson && errJson.error && errJson.error.message) msg = errJson.error.message;
+      } catch(parseErr) {}
+      return { category: null, error: msg };
+    }
+    const data = await res.json();
+    const text = (data && data.candidates && data.candidates[0] && data.candidates[0].content
+      && data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+      && data.candidates[0].content.parts[0].text || '').trim();
+    if(!text) return { category: null, error: 'Empty response from Gemini' };
+    const exact = CATEGORIES.find(c => c.toLowerCase() === text.toLowerCase());
+    const loose = exact || CATEGORIES.find(c => text.toLowerCase().includes(c.toLowerCase()));
+    const result = loose || 'Other';
+    rememberCategory(name, result);
+    return { category: result, error: null };
+  } catch(e){
+    console.error('Categorization failed', e);
+    const msg = (e && e.message) ? e.message : 'Network error (possibly blocked by browser/CORS)';
+    return { category: null, error: msg };
+  }
+}
+
+// Categorize many items in a single request — uses only 1 unit of the
+// daily quota no matter how many items are being sorted.
+async function categorizeBatchWithGemini(names){
+  const key = getApiKey();
+  if(!key) return { results: {}, error: 'No API key set' };
+  if(!names.length) return { results: {}, error: null };
+
+  const prompt = `Classify each of these shopping list items into exactly one of these categories: ${CATEGORIES.join(', ')}.
+Respond with exactly one line per item, in the same order, formatted as:
+1) Category
+2) Category
+...and so on — nothing else, no extra commentary.
+
+Items:
+${names.map((n, i) => `${i + 1}) ${n}`).join('\n')}`;
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + encodeURIComponent(key);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if(!res.ok){
+      let msg = 'Request failed (HTTP ' + res.status + ')';
+      try {
+        const errJson = await res.json();
+        if(errJson && errJson.error && errJson.error.message) msg = errJson.error.message;
+      } catch(parseErr) {}
+      return { results: {}, error: msg };
+    }
+    const data = await res.json();
+    const text = (data && data.candidates && data.candidates[0] && data.candidates[0].content
+      && data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+      && data.candidates[0].content.parts[0].text || '').trim();
+    if(!text) return { results: {}, error: 'Empty response from Gemini' };
+
+    const results = {};
+    text.split('\n').forEach(line => {
+      const m = line.match(/^\s*(\d+)\)\s*(.+?)\s*$/);
+      if(!m) return;
+      const idx = parseInt(m[1], 10) - 1;
+      const raw = m[2];
+      if(idx < 0 || idx >= names.length) return;
+      const exact = CATEGORIES.find(c => c.toLowerCase() === raw.toLowerCase());
+      const loose = exact || CATEGORIES.find(c => raw.toLowerCase().includes(c.toLowerCase()));
+      const cat = loose || 'Other';
+      results[names[idx]] = cat;
+      rememberCategory(names[idx], cat);
+    });
+    return { results, error: null };
+  } catch(e){
+    console.error('Batch categorization failed', e);
+    const msg = (e && e.message) ? e.message : 'Network error (possibly blocked by browser/CORS)';
+    return { results: {}, error: msg };
+  }
+}
+
+// If a purchased item has a recurrence set and enough time has passed
+// since it was bought, move it back to "To Buy" automatically.
+function checkRecurring(){
+  const now = Date.now();
+  let restored = [];
+  items.forEach(it => {
+    if(it.done && it.recurDays && it.doneAt){
+      const dueAt = it.doneAt + it.recurDays * 86400000;
+      if(now >= dueAt){
+        it.done = false;
+        it.doneAt = null;
+        restored.push(it.name);
+      }
+    }
+  });
+  if(restored.length){
+    save();
+    showToast(restored.length === 1
+      ? `Back on your list: ${restored[0]}`
+      : `${restored.length} items are back on your list`);
+  }
+}
+
+function loadLists(){
+  try {
+    const raw = localStorage.getItem(LISTS_STORAGE_KEY);
+    lists = raw ? JSON.parse(raw) : [];
+  } catch(e){
+    lists = [];
+  }
+  if(!lists.length){
+    lists = [{ id: uid(), name: 'Groceries' }];
+  }
+}
+
+function saveLists(){
+  try { localStorage.setItem(LISTS_STORAGE_KEY, JSON.stringify(lists)); } catch(e) {}
+}
+
+function loadCurrentListId(){
+  let id = null;
+  try { id = localStorage.getItem(CURRENT_LIST_STORAGE_KEY); } catch(e) {}
+  if(!id || !lists.some(l => l.id === id)){
+    id = lists[0].id;
+  }
+  currentListId = id;
+}
+
+function saveCurrentListId(){
+  try { localStorage.setItem(CURRENT_LIST_STORAGE_KEY, currentListId); } catch(e) {}
+}
+
+function switchList(id){
+  if(id === currentListId) return;
+  currentListId = id;
+  saveCurrentListId();
+  render();
+}
+
+function createList(){
+  const newList = { id: uid(), name: 'New List' };
+  lists.push(newList);
+  saveLists();
+  currentListId = newList.id;
+  saveCurrentListId();
+  render();
+  // Immediately let the person name it.
+  requestAnimationFrame(() => {
+    const tabEl = document.querySelector(`.list-tab[data-id="${newList.id}"] .list-tab-name`);
+    if(tabEl) startEditListName(newList.id, tabEl);
+  });
+}
+
+function renameList(id, newName){
+  const list = lists.find(l => l.id === id);
+  if(!list) return;
+  const trimmed = newName.trim();
+  if(trimmed) list.name = trimmed;
+  saveLists();
+  render();
+}
+
+let pendingDeleteListId = null;
+let pendingDeleteTimer = null;
+
+function deleteList(id, e){
+  if(e) e.stopPropagation();
+  if(lists.length <= 1){
+    showToast("You need at least one list");
+    return;
+  }
+  const list = lists.find(l => l.id === id);
+  if(!list) return;
+
+  // Tap-twice-to-confirm instead of window.confirm(), which browsers and
+  // sandboxed previews can silently block.
+  if(pendingDeleteListId !== id){
+    pendingDeleteListId = id;
+    clearTimeout(pendingDeleteTimer);
+    pendingDeleteTimer = setTimeout(() => {
+      pendingDeleteListId = null;
+      render();
+    }, 3000);
+    render();
+    return;
+  }
+
+  clearTimeout(pendingDeleteTimer);
+  pendingDeleteListId = null;
+
+  lists = lists.filter(l => l.id !== id);
+  items = items.filter(i => i.listId !== id);
+  saveLists();
+  save();
+
+  if(currentListId === id){
+    currentListId = lists[0].id;
+    saveCurrentListId();
+  }
+  render();
+}
+
+function startEditListName(id, nameEl){
+  const list = lists.find(l => l.id === id);
+  if(!list) return;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'list-tab-edit-input';
+  input.value = list.name;
+  input.maxLength = 30;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+  const commit = () => {
+    if(done) return;
+    done = true;
+    renameList(id, input.value);
+  };
+  const cancel = () => {
+    if(done) return;
+    done = true;
+    render();
+  };
+
+  input.addEventListener('keydown', (ev) => {
+    ev.stopPropagation();
+    if(ev.key === 'Enter') commit();
+    else if(ev.key === 'Escape') cancel();
+  });
+  input.addEventListener('blur', commit);
+  input.addEventListener('click', (ev) => ev.stopPropagation());
+}
+
+function renderListTabs(){
+  listTabs.innerHTML = '';
+  lists.forEach(list => {
+    const tab = document.createElement('button');
+    tab.className = 'list-tab' + (list.id === currentListId ? ' active' : '');
+    tab.dataset.id = list.id;
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'list-tab-name';
+    nameSpan.textContent = list.name;
+    tab.appendChild(nameSpan);
+
+    if(list.id === currentListId){
+      const editBtn = document.createElement('span');
+      editBtn.className = 'list-tab-icon';
+      editBtn.textContent = '✎';
+      editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startEditListName(list.id, tab.querySelector('.list-tab-name'));
+      });
+      tab.appendChild(editBtn);
+
+      if(lists.length > 1){
+        const delBtn = document.createElement('span');
+        const isPending = pendingDeleteListId === list.id;
+        delBtn.className = 'list-tab-icon' + (isPending ? ' confirm-delete' : '');
+        delBtn.textContent = isPending ? 'tap again' : '✕';
+        delBtn.addEventListener('click', (e) => deleteList(list.id, e));
+        tab.appendChild(delBtn);
+      }
+    }
+
+    tab.addEventListener('click', () => switchList(list.id));
+    listTabs.appendChild(tab);
+  });
+
+  const addTab = document.createElement('button');
+  addTab.className = 'list-tab add-list-tab';
+  addTab.textContent = '+ new list';
+  addTab.addEventListener('click', createList);
+  listTabs.appendChild(addTab);
+}
+
+async function load(){
+  loadLists();
+  loadCurrentListId();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    items = raw ? JSON.parse(raw) : [];
+    items.forEach(it => {
+      if(typeof it.qty !== 'number' || it.qty < 1) it.qty = 1;
+      if(typeof it.recurDays !== 'number') it.recurDays = 0;
+      if(typeof it.category !== 'string') it.category = null;
+      if(typeof it.price !== 'number') it.price = null;
+      // Items saved before multiple lists existed belong to the first list.
+      if(typeof it.listId !== 'string' || !lists.some(l => l.id === it.listId)){
+        it.listId = lists[0].id;
+      }
+      it.categorizing = false;
+    });
+  } catch(e) {
+    items = [];
+  }
+  loaded = true;
+  checkRecurring();
+  statusLine.textContent = 'saved on this device';
+  render();
+}
+
+async function save(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch(e) {
+    statusLine.textContent = 'couldn\'t save — try again';
+    return;
+  }
+  statusLine.textContent = 'saved on this device';
+}
+
+async function addItem(name, qty){
+  name = name.trim();
+  if(!name) return;
+  const newIt = { id: uid(), name, qty: qty || 1, done: false, doneAt: null, recurDays: 0, category: null, price: null, categorizing: false, listId: currentListId };
+  items.unshift(newIt);
+
+  // Free, instant categorization first — no network needed.
+  const cached = cachedCategoryFor(name);
+  const guess = cached || localCategorize(name);
+  if(guess){
+    newIt.category = guess;
+    save();
+    render();
+    return;
+  }
+
+  save();
+  render();
+
+  // Only fall back to Gemini if the local dictionary didn't recognize it.
+  if(getApiKey()){
+    newIt.categorizing = true;
+    render();
+    const result = await categorizeWithGemini(name);
+    newIt.categorizing = false;
+    if(result.category){
+      newIt.category = result.category;
+    } else if(result.error){
+      showToast(`Couldn't auto-sort: ${result.error}`);
+    }
+    save();
+    render();
+  }
+}
+
+function toggleItem(id){
+  const it = items.find(i => i.id === id);
+  if(!it) return;
+  it.done = !it.done;
+  it.doneAt = it.done ? Date.now() : null;
+  if(it.done) showToast(`Purchased: ${it.name}`);
+  save();
+  render();
+}
+
+function removeItem(id, e){
+  e.stopPropagation();
+  items = items.filter(i => i.id !== id);
+  save();
+  render();
+}
+
+// Generic inline editor: swaps a small badge element for a text input,
+// commits on Enter/blur, cancels on Escape. Avoids window.prompt(), which
+// browsers and sandboxed previews can silently block.
+function startInlineEdit(el, initialValue, opts){
+  const input = document.createElement('input');
+  input.type = opts.type || 'text';
+  if(opts.type === 'number'){ input.step = 'any'; input.min = '0'; input.inputMode = 'decimal'; }
+  input.className = 'badge-edit-input';
+  input.value = initialValue;
+  if(opts.placeholder) input.placeholder = opts.placeholder;
+  el.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+  const commit = () => {
+    if(done) return;
+    done = true;
+    opts.onCommit(input.value.trim());
+  };
+  const cancel = () => {
+    if(done) return;
+    done = true;
+    render();
+  };
+
+  input.addEventListener('keydown', (ev) => {
+    ev.stopPropagation();
+    if(ev.key === 'Enter') commit();
+    else if(ev.key === 'Escape') cancel();
+  });
+  input.addEventListener('blur', commit);
+  input.addEventListener('click', (ev) => ev.stopPropagation());
+}
+
+function editQty(id, e){
+  e.stopPropagation();
+  const it = items.find(i => i.id === id);
+  if(!it) return;
+  startInlineEdit(e.currentTarget, it.qty, {
+    type: 'number',
+    onCommit: (val) => {
+      const n = parseInt(val, 10);
+      if(Number.isFinite(n) && n >= 1) it.qty = n;
+      save();
+      render();
+    }
+  });
+}
+
+function editPrice(id, e){
+  e.stopPropagation();
+  const it = items.find(i => i.id === id);
+  if(!it) return;
+  startInlineEdit(e.currentTarget, it.price !== null ? it.price : '', {
+    type: 'number',
+    placeholder: '0.00',
+    onCommit: (val) => {
+      if(val === ''){
+        it.price = null;
+      } else {
+        const n = parseFloat(val);
+        if(Number.isFinite(n) && n >= 0) it.price = n;
+      }
+      save();
+      render();
+    }
+  });
+}
+
+function startEditName(id, nameEl, e){
+  if(e) e.stopPropagation();
+  const it = items.find(i => i.id === id);
+  if(!it) return;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'name-edit-input';
+  input.value = it.name;
+  input.maxLength = 80;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+  const commit = () => {
+    if(done) return;
+    done = true;
+    const val = input.value.trim();
+    if(val) it.name = val;
+    save();
+    render();
+  };
+  const cancel = () => {
+    if(done) return;
+    done = true;
+    render();
+  };
+
+  input.addEventListener('keydown', (ev) => {
+    ev.stopPropagation();
+    if(ev.key === 'Enter') commit();
+    else if(ev.key === 'Escape') cancel();
+  });
+  input.addEventListener('blur', commit);
+  input.addEventListener('click', (ev) => ev.stopPropagation());
+}
+
+function setCategory(id, cat, e){
+  if(e) e.stopPropagation();
+  const it = items.find(i => i.id === id);
+  if(!it) return;
+  it.category = cat || null;
+  it.categorizing = false;
+  if(cat) rememberCategory(it.name, cat);
+  save();
+  render();
+}
+
+function cycleRecur(id, e){
+  e.stopPropagation();
+  const it = items.find(i => i.id === id);
+  if(!it) return;
+  const idx = RECUR_OPTIONS.indexOf(it.recurDays);
+  const next = RECUR_OPTIONS[(idx + 1) % RECUR_OPTIONS.length];
+  it.recurDays = next;
+  save();
+  render();
+  if(next) showToast(`Will remind you every ${next} days after purchase`);
+}
+
+function clearPurchased(){
+  items = items.filter(i => !(i.done && i.listId === currentListId));
+  save();
+  render();
+}
+
+function formatPurchasedDate(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const yest = new Date(now); yest.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yest.toDateString();
+  const time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  if(isToday) return `Bought today · ${time}`;
+  if(isYesterday) return `Bought yesterday · ${time}`;
+  const dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return `Bought ${dateStr} · ${time}`;
+}
+
+function makeItemEl(it, number){
+  const li = document.createElement('li');
+  li.className = 'item' + (it.done ? ' done' : '');
+  li.innerHTML = `
+    <div class="item-row-top">
+      ${number ? `<div class="item-number">${number}</div>` : ''}
+      <div class="checkbox-tap">
+        <div class="checkbox">
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5L4.5 8.5L11 1" stroke="#FBF6EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="item-info">
+        <div class="item-name"><span class="name-scroll"></span></div>
+        <div class="purchased-date" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="item-row-actions">
+      <div class="stamp">✓ BOUGHT</div>
+      <div class="qty-badge" style="display:none;"></div>
+      <div class="price-badge"></div>
+      <span class="category-loading" style="display:none;">sorting…</span>
+      <select class="category-select" aria-label="Category"></select>
+      <button class="recur-btn" aria-label="Set repeat reminder"></button>
+      <button class="edit-btn" aria-label="Edit item name">✎</button>
+      <button class="remove-btn" aria-label="Remove item">✕</button>
+    </div>
+  `;
+  li.querySelector('.name-scroll').textContent = it.name;
+
+  const nameEl = li.querySelector('.item-name');
+  nameEl.title = it.name;
+  nameEl.addEventListener('click', (e) => startEditName(it.id, nameEl, e));
+  li.querySelector('.edit-btn').addEventListener('click', (e) => startEditName(it.id, li.querySelector('.item-name'), e));
+
+  if(it.done && it.doneAt){
+    const dateEl = li.querySelector('.purchased-date');
+    dateEl.textContent = formatPurchasedDate(it.doneAt);
+    dateEl.style.display = 'block';
+  }
+
+  const qtyBadge = li.querySelector('.qty-badge');
+  if(it.qty > 1){
+    qtyBadge.textContent = `×${it.qty}`;
+    qtyBadge.style.display = 'inline-block';
+    qtyBadge.addEventListener('click', (e) => editQty(it.id, e));
+  }
+
+  const priceBadge = li.querySelector('.price-badge');
+  if(it.price !== null){
+    const lineTotal = it.price * it.qty;
+    priceBadge.textContent = it.qty > 1
+      ? `${formatMoney(it.price)} ea · ${formatMoney(lineTotal)}`
+      : formatMoney(it.price);
+    priceBadge.classList.add('set');
+  } else {
+    priceBadge.textContent = '+ price';
+    priceBadge.classList.remove('set');
+  }
+  priceBadge.addEventListener('click', (e) => editPrice(it.id, e));
+
+  const catSelect = li.querySelector('.category-select');
+  const catLoading = li.querySelector('.category-loading');
+  if(it.categorizing){
+    catSelect.style.display = 'none';
+    catLoading.style.display = 'inline';
+  } else {
+    catSelect.innerHTML = '<option value="">Uncategorized</option>' +
+      CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
+    catSelect.value = it.category || '';
+    catSelect.addEventListener('click', (e) => e.stopPropagation());
+    catSelect.addEventListener('change', (e) => setCategory(it.id, e.target.value, e));
+  }
+
+  const recurBtn = li.querySelector('.recur-btn');
+  recurBtn.textContent = recurLabel(it.recurDays);
+  recurBtn.title = it.recurDays ? `Repeats every ${it.recurDays} days — tap to change` : 'Tap to set a repeat reminder';
+  if(it.recurDays) recurBtn.classList.add('active');
+  recurBtn.addEventListener('click', (e) => cycleRecur(it.id, e));
+
+  li.querySelector('.checkbox-tap').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleItem(it.id);
+  });
+  li.querySelector('.remove-btn').addEventListener('click', (e) => removeItem(it.id, e));
+  return li;
+}
+
+function setupMarquees(){
+  document.querySelectorAll('li.item .item-name').forEach(nameEl => {
+    const inner = nameEl.querySelector('.name-scroll');
+    if(!inner) return;
+    nameEl.classList.remove('marquee');
+    inner.style.animationDuration = '';
+    nameEl.style.removeProperty('--scroll-dist');
+
+    const overflow = inner.scrollWidth - nameEl.clientWidth;
+    if(overflow > 6){
+      const dist = -(overflow + 6);
+      nameEl.style.setProperty('--scroll-dist', `${dist}px`);
+      const duration = Math.min(14, Math.max(4, Math.abs(dist) / 35 + 3));
+      inner.style.animationDuration = `${duration}s`;
+      nameEl.classList.add('marquee');
+    }
+  });
+}
+
+function makeCategoryHeading(text){
+  const li = document.createElement('li');
+  li.className = 'category-heading';
+  li.textContent = text;
+  return li;
+}
+
+function groupItemsByCategory(list){
+  const order = [...CATEGORIES, 'Uncategorized'];
+  const buckets = {};
+  order.forEach(c => buckets[c] = []);
+  list.forEach(it => {
+    const cat = (it.category && CATEGORIES.includes(it.category)) ? it.category : 'Uncategorized';
+    buckets[cat].push(it);
+  });
+  return order.map(label => ({ label, list: buckets[label] })).filter(g => g.list.length);
+}
+
+function render(){
+  renderListTabs();
+
+  const listItems = items.filter(i => i.listId === currentListId);
+  const toBuy = listItems.filter(i => !i.done);
+  const purchased = listItems.filter(i => i.done).sort((a,b)=> (b.doneAt||0) - (a.doneAt||0));
+
+  toBuyList.innerHTML = '';
+  const grouped = groupItemsByCategory(toBuy);
+  const anyCategorized = toBuy.some(it => it.category);
+  let counter = 0;
+  grouped.forEach(group => {
+    if(anyCategorized) toBuyList.appendChild(makeCategoryHeading(group.label));
+    group.list.forEach(it => {
+      counter++;
+      toBuyList.appendChild(makeItemEl(it, counter));
+    });
+  });
+  emptyToBuy.style.display = toBuy.length ? 'none' : 'block';
+  toBuyCount.textContent = toBuy.length;
+
+  const toBuyPriced = toBuy.filter(it => it.price !== null);
+  if(toBuyPriced.length){
+    const estTotal = toBuyPriced.reduce((sum, it) => sum + it.price * it.qty, 0);
+    const note = toBuyPriced.length < toBuy.length ? ` (${toBuyPriced.length} of ${toBuy.length} priced)` : '';
+    toBuySpend.textContent = `Estimated: ${formatMoney(estTotal)}${note}`;
+    toBuySpend.style.display = 'block';
+  } else {
+    toBuySpend.style.display = 'none';
+  }
+
+  purchasedList.innerHTML = '';
+  purchased.forEach(it => purchasedList.appendChild(makeItemEl(it)));
+  purchasedLabel.style.display = purchased.length ? 'flex' : 'none';
+  purchasedCount.textContent = purchased.length;
+  clearBtn.style.display = purchased.length ? 'inline' : 'none';
+
+  const purchasedPriced = purchased.filter(it => it.price !== null);
+  if(purchasedPriced.length){
+    const spentTotal = purchasedPriced.reduce((sum, it) => sum + it.price * it.qty, 0);
+    const note = purchasedPriced.length < purchased.length ? ` (${purchasedPriced.length} of ${purchased.length} priced)` : '';
+    purchasedSpend.textContent = `Total spent: ${formatMoney(spentTotal)}${note}`;
+    purchasedSpend.style.display = 'block';
+  } else {
+    purchasedSpend.style.display = 'none';
+  }
+
+  requestAnimationFrame(setupMarquees);
+}
+
+function setAddQty(n){
+  addQty = Math.max(1, Math.min(99, n));
+  qtyValueEl.textContent = addQty;
+}
+
+document.getElementById('qtyMinus').addEventListener('click', () => setAddQty(addQty - 1));
+document.getElementById('qtyPlus').addEventListener('click', () => setAddQty(addQty + 1));
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  addItem(newItemInput.value, addQty);
+  newItemInput.value = '';
+  setAddQty(1);
+  newItemInput.focus();
+});
+
+newItemInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    addItem(newItemInput.value, addQty);
+    newItemInput.value = '';
+    setAddQty(1);
+  }
+});
+
+clearBtn.addEventListener('click', clearPurchased);
+
+// --- Share ---------------------------------------------------------
+function buildShareText(){
+  const toBuy = items.filter(i => !i.done && i.listId === currentListId);
+  const currentList = lists.find(l => l.id === currentListId);
+  const listName = currentList ? currentList.name : 'THE LIST';
+  if(!toBuy.length){
+    return `🛒 ${listName.toUpperCase()}\n\nEverything is already bought — nothing left on the list! ✅`;
+  }
+  const grouped = groupItemsByCategory(toBuy);
+  const anyCategorized = toBuy.some(i => i.category);
+  const lines = [`🛒 ${listName.toUpperCase()}`, ''];
+  let n = 0;
+  let runningTotal = 0;
+  let anyPriced = false;
+  grouped.forEach(group => {
+    if(anyCategorized) lines.push(`— ${group.label} —`);
+    group.list.forEach(it => {
+      n++;
+      const qtyStr = it.qty > 1 ? ` (×${it.qty})` : '';
+      let priceStr = '';
+      if(it.price !== null){
+        anyPriced = true;
+        runningTotal += it.price * it.qty;
+        priceStr = ` — ${formatMoney(it.price * it.qty)}`;
+      }
+      lines.push(`${n}. ${it.name}${qtyStr}${priceStr}`);
+    });
+  });
+  if(anyPriced){
+    lines.push('');
+    lines.push(`Estimated total: ${formatMoney(runningTotal)}`);
+  }
+  return lines.join('\n');
+}
+
+function legacyCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  ta.style.top = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('List copied — paste it anywhere');
+  } catch(e){
+    showToast('Could not copy automatically — select the text and copy manually');
+  }
+  document.body.removeChild(ta);
+}
+
+function copyListToClipboard(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('List copied — paste it anywhere'))
+      .catch(() => legacyCopy(text));
+  } else {
+    legacyCopy(text);
+  }
+}
+
+shareBtn.addEventListener('click', async () => {
+  const text = buildShareText();
+  if(navigator.share){
+    try {
+      await navigator.share({ title: 'My Shopping List', text });
+    } catch(e){
+      // AbortError just means the person cancelled the share sheet — not an error.
+      if(e && e.name !== 'AbortError') copyListToClipboard(text);
+    }
+  } else {
+    copyListToClipboard(text);
+  }
+});
+
+// --- Settings modal ----------------------------------------------------
+function openSettings(){
+  apiKeyInput.value = getApiKey();
+  currencyInput.value = getCurrency();
+  modalStatus.classList.remove('error');
+  modalStatus.textContent = getApiKey() ? 'AI categorization is on. Tap Test to double-check it still works.' : '';
+  settingsOverlay.style.display = 'flex';
+}
+function closeSettings(){
+  settingsOverlay.style.display = 'none';
+}
+
+saveCurrencyBtn.addEventListener('click', () => {
+  const symbol = currencyInput.value.trim() || '₹';
+  try {
+    localStorage.setItem(CURRENCY_STORAGE, symbol);
+    showToast(`Currency set to ${symbol}`);
+    render();
+  } catch(e){
+    showToast("Couldn't save currency on this device");
+  }
+});
+
+// --- Support / UPI donation --------------------------------------------
+let qrLibraryPromise = null;
+function loadQrLibrary(){
+  if(window.QRCode) return Promise.resolve();
+  if(qrLibraryPromise) return qrLibraryPromise;
+  qrLibraryPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('QR library failed to load'));
+    document.head.appendChild(script);
+  });
+  return qrLibraryPromise;
+}
+
+function buildUpiLink(amount){
+  let link = `upi://pay?pa=${encodeURIComponent(SUPPORT_UPI_ID)}&pn=${encodeURIComponent(SUPPORT_NAME)}&cu=INR&tn=${encodeURIComponent('Support The List app')}`;
+  if(amount) link += `&am=${encodeURIComponent(amount)}`;
+  return link;
+}
+
+function renderUpiQr(){
+  const amount = supportAmountInput.value.trim();
+  const link = buildUpiLink(amount);
+  upiQrCode.innerHTML = '';
+  loadQrLibrary().then(() => {
+    upiQrStatus.style.display = 'none';
+    new QRCode(upiQrCode, {
+      text: link,
+      width: 180,
+      height: 180,
+      colorDark: '#2A2A28',
+      colorLight: '#FBF6EC'
+    });
+  }).catch(() => {
+    upiQrStatus.style.display = 'block';
+    upiQrStatus.textContent = "Couldn't load the QR code (needs internet) — use the button below, or pay the ID manually.";
+  });
+}
+
+function openSupportModal(){
+  upiIdText.textContent = SUPPORT_UPI_ID;
+  supportAmountInput.value = '';
+  upiQrStatus.style.display = 'block';
+  upiQrStatus.textContent = 'Loading QR code…';
+  supportOverlay.style.display = 'flex';
+  renderUpiQr();
+}
+function closeSupportModal(){
+  supportOverlay.style.display = 'none';
+}
+
+supportBtn.addEventListener('click', openSupportModal);
+closeSupportBtn.addEventListener('click', closeSupportModal);
+supportOverlay.addEventListener('click', (e) => {
+  if(e.target === supportOverlay) closeSupportModal();
+});
+
+let qrDebounce;
+supportAmountInput.addEventListener('input', () => {
+  clearTimeout(qrDebounce);
+  qrDebounce = setTimeout(renderUpiQr, 400);
+});
+
+openUpiBtn.addEventListener('click', () => {
+  const amount = supportAmountInput.value.trim();
+  window.location.href = buildUpiLink(amount);
+});
+
+copyUpiBtn.addEventListener('click', () => {
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(SUPPORT_UPI_ID)
+      .then(() => showToast('UPI ID copied'))
+      .catch(() => legacyCopy(SUPPORT_UPI_ID));
+  } else {
+    legacyCopy(SUPPORT_UPI_ID);
+  }
+});
+
+settingsBtn.addEventListener('click', openSettings);
+closeModalBtn.addEventListener('click', closeSettings);
+settingsOverlay.addEventListener('click', (e) => {
+  if(e.target === settingsOverlay) closeSettings();
+});
+
+saveKeyBtn.addEventListener('click', () => {
+  const key = apiKeyInput.value.trim();
+  if(!key){
+    modalStatus.textContent = 'Paste a key first, or tap Remove to turn this off.';
+    modalStatus.classList.add('error');
+    return;
+  }
+  try {
+    localStorage.setItem(API_KEY_STORAGE, key);
+    modalStatus.classList.remove('error');
+    modalStatus.textContent = 'Saved. Tap Test to confirm it works.';
+  } catch(e){
+    modalStatus.classList.add('error');
+    modalStatus.textContent = "Couldn't save the key on this device.";
+  }
+});
+
+testKeyBtn.addEventListener('click', async () => {
+  const key = apiKeyInput.value.trim();
+  if(!key){
+    modalStatus.classList.add('error');
+    modalStatus.textContent = 'Paste a key first.';
+    return;
+  }
+  // Test with whatever is currently in the box, saving it first so
+  // categorizeWithGemini (which reads from storage) uses the same key.
+  try { localStorage.setItem(API_KEY_STORAGE, key); } catch(e) {}
+  testKeyBtn.disabled = true;
+  testKeyBtn.textContent = 'Testing…';
+  modalStatus.classList.remove('error');
+  modalStatus.textContent = 'Sending a test request…';
+  const result = await categorizeWithGemini('facewash');
+  testKeyBtn.disabled = false;
+  testKeyBtn.textContent = 'Test';
+  if(result.category){
+    modalStatus.classList.remove('error');
+    modalStatus.textContent = `✓ It works! "facewash" → ${result.category}`;
+  } else {
+    modalStatus.classList.add('error');
+    modalStatus.textContent = `✕ ${result.error}`;
+  }
+});
+
+removeKeyBtn.addEventListener('click', () => {
+  try { localStorage.removeItem(API_KEY_STORAGE); } catch(e) {}
+  apiKeyInput.value = '';
+  modalStatus.classList.remove('error');
+  modalStatus.textContent = 'AI categorization turned off.';
+});
+
+// --- Manual "sort" for items added before a key was set ---------------
+sortBtn.addEventListener('click', async () => {
+  const toSort = items.filter(i => !i.done && !i.category && i.listId === currentListId);
+  if(!toSort.length){
+    showToast('Everything is already sorted');
+    return;
+  }
+
+  sortBtn.classList.add('busy');
+  sortBtn.textContent = '✨ sorting…';
+
+  // Free pass 1: anything we've categorized before (same name) costs nothing.
+  let freeHits = 0;
+  let afterCache = [];
+  toSort.forEach(it => {
+    const cached = cachedCategoryFor(it.name);
+    if(cached){
+      it.category = cached;
+      freeHits++;
+    } else {
+      afterCache.push(it);
+    }
+  });
+
+  // Free pass 2: the built-in keyword dictionary — still no network involved.
+  const stillNeeded = [];
+  afterCache.forEach(it => {
+    const guess = localCategorize(it.name);
+    if(guess){
+      it.category = guess;
+      freeHits++;
+    } else {
+      stillNeeded.push(it);
+    }
+  });
+
+  if(freeHits){ save(); render(); }
+
+  if(!stillNeeded.length){
+    sortBtn.classList.remove('busy');
+    sortBtn.textContent = '✨ sort';
+    showToast(`Sorted ${freeHits} item${freeHits === 1 ? '' : 's'} — no API needed`);
+    return;
+  }
+
+  if(!getApiKey()){
+    sortBtn.classList.remove('busy');
+    sortBtn.textContent = '✨ sort';
+    showToast(freeHits
+      ? `Sorted ${freeHits} — ${stillNeeded.length} left to sort manually`
+      : `${stillNeeded.length} item${stillNeeded.length === 1 ? '' : 's'} didn't match a known category — sort manually, or add a Gemini key for AI help`);
+    return;
+  }
+
+  stillNeeded.forEach(it => it.categorizing = true);
+  render();
+
+  // One request covers every remaining item, so a whole list only costs
+  // a single unit of the daily free quota.
+  const names = stillNeeded.map(it => it.name);
+  const { results, error } = await categorizeBatchWithGemini(names);
+
+  let apiHits = 0;
+  stillNeeded.forEach(it => {
+    it.categorizing = false;
+    if(results[it.name]){
+      it.category = results[it.name];
+      apiHits++;
+    }
+  });
+  save();
+  render();
+
+  sortBtn.classList.remove('busy');
+  sortBtn.textContent = '✨ sort';
+
+  const totalSorted = freeHits + apiHits;
+  if(error && apiHits === 0){
+    showToast(freeHits
+      ? `Sorted ${freeHits} from memory — ${error}`
+      : error);
+  } else if(error){
+    showToast(`Sorted ${totalSorted}, then stopped — ${error}`);
+  } else {
+    showToast(`Sorted ${totalSorted} item${totalSorted === 1 ? '' : 's'}`);
+  }
+});
+
+load();
+
+// Re-check recurring items whenever the app regains focus, in case it was
+// left open across midnight or reopened after a few days away.
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && loaded){
+    checkRecurring();
+    render();
+  }
+});
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(setupMarquees, 200);
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // Check for a newer service worker periodically and whenever the
+      // app regains focus, so the cached fallback stays fresh too.
+      setInterval(() => reg.update(), 60 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => {
+        if(document.visibilityState === 'visible') reg.update();
+      });
+    }).catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>

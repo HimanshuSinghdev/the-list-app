@@ -1,0 +1,16 @@
+{
+  "name": "The List — Shopping Tracker",
+  "short_name": "The List",
+  "description": "Track what you need to buy and check items off as you purchase them.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#DCD3BE",
+  "theme_color": "#2A2A28",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
