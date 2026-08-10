@@ -1,4 +1,9 @@
 # The List — Shopping Tracker
+# The List — Shopping Tracker
+
+[![Open App](https://img.shields.io/badge/🚀_Open_App-Click_Here-2A2A28?style=for-the-badge)](https://himanshusinghdev.github.io/the-list-app/)
+
+👉 **Live App Link:** [https://himanshusinghdev.github.io/the-list-app/](https://himanshusinghdev.github.io/the-list-app/)
 
 Track what you need to buy and check items off as you purchase them. "The List" is a beautifully designed, receipt-themed Progressive Web App (PWA) crafted with care by Himanshu.
 
